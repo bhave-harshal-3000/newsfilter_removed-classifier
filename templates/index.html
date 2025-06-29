@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>📰 Education News Digest</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📰 Education News Digest</h1>
+        <p class="subtitle">Get personalized education news articles delivered directly to your email.</p>
+        <form method="post" class="news-form">
+            <div class="form-group">
+                <label for="email">Your Email</label>
+                <input type="text" id="email" name="email" placeholder="example@email.com, another@email.com" required>
+                <small>You can add multiple comma seperated email ids</small>
+            </div>
+            
+<div class="form-group">
+    <label>News Region</label>
+    <div class="radio-group">
+       <label><input type="radio" name="region" value="India" onchange="showSources()" required> India</label>
+<label><input type="radio" name="region" value="Global" onchange="showSources()" required> Global</label>
+    </div>
+</div>
+<div class="form-group" id="india-sources">
+    <label>Select Indian News Sources:</label>
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="sources" value="flipboard" checked> Flipboard</label>
+        <label><input type="checkbox" name="sources" value="scoopit" checked> Scoop.it</label>
+        <label><input type="checkbox" name="sources" value="hindustan_times" checked> Hindustan Times</label>
+        <label><input type="checkbox" name="sources" value="times_of_india" checked> Times of India</label>
+        <label><input type="checkbox" name="sources" value="indian_express" checked> Indian Express</label>
+        <label><input type="checkbox" name="sources" value="the_hindu" checked> The Hindu</label>
+        <label><input type="checkbox" name="sources" value="deccan_herald" checked> Deccan Herald</label>
+        <label><input type="checkbox" name="sources" value="ndtv" checked> NDTV</label>
+        <label><input type="checkbox" name="sources" value="financial_express" checked> Financial Express</label>
+    </div>
+</div>
+<div class="form-group" id="global-sources" style="display:none;">
+    <label>Select Global News Sources:</label>
+    <div class="checkbox-group">
+        <label><input type="checkbox" name="sources" value="flipboard" checked> Flipboard</label>
+        <label><input type="checkbox" name="sources" value="scoopit" checked> Scoop.it</label>
+        <label><input type="checkbox" name="sources" value="bbc" checked> BBC</label>
+        <label><input type="checkbox" name="sources" value="guardian" checked> The Guardian</label>
+        <label><input type="checkbox" name="sources" value="nytimes" checked> New York Times</label>
+        <label><input type="checkbox" name="sources" value="washington_post" checked> Washington Post</label>
+        <label><input type="checkbox" name="sources" value="telegraph" checked> The Telegraph</label>
+        <label><input type="checkbox" name="sources" value="times_higher_education" checked> Times Higher Education</label>
+        <label><input type="checkbox" name="sources" value="inside_higher_ed" checked> Inside Higher Ed</label>
+        <label><input type="checkbox" name="sources" value="edweek" checked> EdWeek</label>
+        <label><input type="checkbox" name="sources" value="chronicle" checked> The Chronicle</label>
+    </div>
+</div>
+            <div class="form-group">
+                <label>Content Type</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="content_type" value="All" checked> All</label>
+                    <label><input type="radio" name="content_type" value="Only General"> Only General</label>
+                    <label><input type="radio" name="content_type" value="Only Sensitive"> Only Sensitive</label>
+                </div>
+                <small class="info">Choose whether to receive all articles or filter by content type</small>
+            </div>
+            <div class="form-group">
+                <label>Number of news articles:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="top_n" value="10" checked> 10</label>
+                    <label><input type="radio" name="top_n" value="20"> 20</label>
+                    <label><input type="radio" name="top_n" value="30"> 30</label>
+                </div>
+                <small class="info">Number of top news articles to receive</small>
+            </div>
+            <button type="submit" class="submit-btn">Send Me News!</button>
+        </form>
+        <div class="status">
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                <ul>
+                {% for message in messages %}
+                  <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+        </div>
+        
+    </div>
+
+
+<script>
+function showSources() {
+    var region = document.querySelector('input[name="region"]:checked');
+    document.getElementById('india-sources').style.display = (region && region.value === 'India') ? 'block' : 'none';
+    document.getElementById('global-sources').style.display = (region && region.value === 'Global') ? 'block' : 'none';
+}
+window.onload = showSources;
+</script>
+
+</body>
+</html>
