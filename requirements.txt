@@ -13,7 +13,10 @@ tqdm==4.67.1
 python-dateutil==2.9.0.post0
 urllib3==2.4.0
 
-
+flask
+python-dotenv
+langchain
+langchain-google-genai
 
 # pip install requests==2.31.0 beautifulsoup4==4.12.2 gradio==5.34.0 
 # pip install transformers==4.52.4 torch==2.7.1 protobuf==5.29.5

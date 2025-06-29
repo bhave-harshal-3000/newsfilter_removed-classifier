@@ -3,7 +3,11 @@ from langchain_core.messages import HumanMessage
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from emailer import send_email, build_html_email
+
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+
 def select_top_news_with_gemini(articles, top_n=10):
     """
     Use Gemini LLM to score each article for importance (1-10), then select the top N in Python.
@@ -14,7 +18,9 @@ def select_top_news_with_gemini(articles, top_n=10):
         print("Gemini API key not found.")
         return articles[:top_n]
 
-    llm = ChatGoogleGenerativeAI(model="models/gemini-1.5-flash", google_api_key=GEMINI_API_KEY)
+    llm = ChatGoogleGenerativeAI(
+        model="models/gemini-1.5-flash", google_api_key=GEMINI_API_KEY
+    )
     prompt = (
         "You are an expert news assistant. "
         "Given the following list of news headlines (with their sources and links), "
@@ -33,17 +39,18 @@ def select_top_news_with_gemini(articles, top_n=10):
     response = llm.invoke([HumanMessage(content=prompt)])
     print("Gemini raw output:\n", response.content)  # For debugging
 
-    lines = str(response.content).split('\n')
+    lines = str(response.content).split("\n")
     import re
+
     scored_articles = []
     i = 0
     while i < len(lines):
         line = lines[i].strip()
-        if line and ',' in line and line[0].isdigit() and '.' in line:
-            source_headline = line.split('.', 1)[1].strip()
-            url = lines[i+1].strip() if i+1 < len(lines) else ""
-            score_line = lines[i+2].strip() if i+2 < len(lines) else ""
-            score_match = re.search(r'Score:\s*(\d+)', score_line)
+        if line and "," in line and line[0].isdigit() and "." in line:
+            source_headline = line.split(".", 1)[1].strip()
+            url = lines[i + 1].strip() if i + 1 < len(lines) else ""
+            score_line = lines[i + 2].strip() if i + 2 < len(lines) else ""
+            score_match = re.search(r"Score:\s*(\d+)", score_line)
             score = int(score_match.group(1)) if score_match else 0
             for art in articles:
                 if art["title"] in source_headline and art["url"] in url:
@@ -73,11 +80,14 @@ from news_sources import scrape_news
 import requests
 
 from dotenv import load_dotenv
+
 load_dotenv(dotenv_path="scratch.env")
 
 # --- Enhanced Classifier ---
 try:
-    classifier = pipeline("sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
+    classifier = pipeline(
+        "sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest"
+    )
     print("Classifier loaded successfully")
 except Exception as e:
     print(f"Error loading classifier: {e}")
@@ -87,11 +97,19 @@ except Exception as e:
 def clean_title(title):
     if not title:
         return None
-    title = re.sub(r'\s+', ' ', title.strip())
+    title = re.sub(r"\s+", " ", title.strip())
     if len(title) < 10 or len(title) > 200:
         return None
     # Filter out navigation items and ads
-    skip_words = ['subscribe', 'login', 'register', 'advertisement', 'menu', 'search', 'newsletter']
+    skip_words = [
+        "subscribe",
+        "login",
+        "register",
+        "advertisement",
+        "menu",
+        "search",
+        "newsletter",
+    ]
     if any(word in title.lower() for word in skip_words):
         return None
     return title
@@ -102,10 +120,32 @@ def classify_article(title):
         if not classifier:
             # Fallback classification based on keywords
             sensitive_keywords = [
-                'scandal', 'controversy', 'crisis', 'protest', 'violence', 'death', 'suicide',
-                'harassment', 'discrimination', 'abuse', 'fraud', 'corruption', 'strike',
-                'riot', 'attack', 'murder', 'assault', 'drugs', 'alcohol', 'ragging',
-                'sexual', 'assault', 'mental health crisis', 'depression', 'anxiety', 'rape'
+                "scandal",
+                "controversy",
+                "crisis",
+                "protest",
+                "violence",
+                "death",
+                "suicide",
+                "harassment",
+                "discrimination",
+                "abuse",
+                "fraud",
+                "corruption",
+                "strike",
+                "riot",
+                "attack",
+                "murder",
+                "assault",
+                "drugs",
+                "alcohol",
+                "ragging",
+                "sexual",
+                "assault",
+                "mental health crisis",
+                "depression",
+                "anxiety",
+                "rape",
             ]
 
             title_lower = title.lower()
@@ -118,9 +158,27 @@ def classify_article(title):
         result = classifier(title)[0]
 
         sensitive_keywords = [
-            'scandal', 'controversy', 'crisis', 'protest', 'violence', 'death', 'suicide',
-            'harassment', 'discrimination', 'abuse', 'fraud', 'corruption', 'strike',
-            'riot', 'attack', 'murder', 'assault', 'drugs', 'alcohol', 'ragging', 'rape'
+            "scandal",
+            "controversy",
+            "crisis",
+            "protest",
+            "violence",
+            "death",
+            "suicide",
+            "harassment",
+            "discrimination",
+            "abuse",
+            "fraud",
+            "corruption",
+            "strike",
+            "riot",
+            "attack",
+            "murder",
+            "assault",
+            "drugs",
+            "alcohol",
+            "ragging",
+            "rape",
         ]
 
         title_lower = title.lower()
@@ -128,7 +186,7 @@ def classify_article(title):
             if keyword in title_lower:
                 return "Sensitive"
 
-        if result['label'] == 'LABEL_0' and result['score'] > 0.8:  # Very negative
+        if result["label"] == "LABEL_0" and result["score"] > 0.8:  # Very negative
             return "Sensitive"
 
         return "General"
@@ -161,11 +219,12 @@ def create_display_url(url, max_length=50):
     if len(url) <= max_length:
         return url
 
-    if 'news.google.com' in url:
+    if "news.google.com" in url:
         return f"news.google.com/articles/... (Google News)"
 
     try:
         from urllib.parse import urlparse
+
         parsed = urlparse(url)
         domain = parsed.netloc
 
@@ -209,7 +268,7 @@ def format_email(articles):
         body += "📚 GENERAL NEWS:\n"
         body += "-" * 20 + "\n"
         for i, article in enumerate(general, 1):
-            display_url = create_display_url(article['url'])
+            display_url = create_display_url(article["url"])
             body += f"{i}. {article['title']}\n"
             body += f"   🔗 Full link: {article['url']}\n\n"
 
@@ -217,7 +276,7 @@ def format_email(articles):
         body += "⚠️  SENSITIVE NEWS:\n"
         body += "-" * 20 + "\n"
         for i, article in enumerate(sensitive, 1):
-            display_url = create_display_url(article['url'])
+            display_url = create_display_url(article["url"])
             body += f"{i}. {article['title']}\n"
             body += f"   🔗 Full link: {article['url']}\n\n"
 
@@ -231,26 +290,6 @@ def format_email(articles):
     return body
 
 
-def send_email(to, subject, body):
-    try:
-        from_email = os.getenv("EMAIL")
-        password = os.getenv("PASS")
-
-        msg = MIMEText(body, 'plain', 'utf-8')
-        msg["Subject"] = subject
-        msg["From"] = from_email
-        msg["To"] = to
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:  # 10 seconds timeout
-            server.login(from_email, password)
-            server.send_message(msg)
-
-        print(f"✅ Email sent successfully to {to}")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to send email to {to}: {e}")
-        return False
-
 def process_and_send(emails, region, content_type, top_n=10, sources=None):
     articles, errors = scrape_news(region, sources)
     # Support multiple emails separated by comma or semicolon
@@ -258,8 +297,8 @@ def process_and_send(emails, region, content_type, top_n=10, sources=None):
         return "❌ Please enter at least one email address"
 
     # Split and clean emails
-    email_list = [e.strip() for e in re.split(r'[;,]', emails) if e.strip()]
-    invalids = [e for e in email_list if '@' not in e]
+    email_list = [e.strip() for e in re.split(r"[;,]", emails) if e.strip()]
+    invalids = [e for e in email_list if "@" not in e]
     if not email_list or invalids:
         return f"❌ Invalid email(s): {', '.join(invalids)}"
 
@@ -295,13 +334,16 @@ def process_and_send(emails, region, content_type, top_n=10, sources=None):
     print(f"✨ Gemini selected {len(top_articles)} top articles")
 
     # Format email body once
+
+
     email_body = format_email([(a, classify_article(a["title"])) for a in top_articles])
+    html_body = build_html_email(top_articles, topic=region)
     subject = f"📚 Education News Digest - {region} (Top {top_n} articles)"
 
     # Send to all emails
     success, failed = [], []
     for email in email_list:
-        if send_email(email, subject, email_body):
+        if send_email(email, subject, email_body, html_body):
             success.append(email)
         else:
             failed.append(email)
@@ -341,7 +383,7 @@ def process_and_send(emails, region, content_type, top_n=10, sources=None):
 
 #         with gr.Column():
 #             output = gr.Textbox(label="Status", interactive=False)
-            
+
 
 #     submit_btn.click(
 #         fn=process_and_send,

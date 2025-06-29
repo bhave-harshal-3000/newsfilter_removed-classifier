@@ -148,13 +148,15 @@ def scrape_hindustan_times():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Hindustan Times"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Hindustan Times: {e}")
         return []
+
+# ...existing code...
 
 def scrape_times_of_india():
     try:
@@ -178,7 +180,7 @@ def scrape_times_of_india():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Times of India"})
                     seen_titles.add(title)
 
         return articles
@@ -208,14 +210,13 @@ def scrape_indian_express_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Indian Express"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Indian Express: {e}")
         return []
-
 
 def scrape_the_hindu_education():
     try:
@@ -239,14 +240,13 @@ def scrape_the_hindu_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "The Hindu"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping The Hindu: {e}")
         return []
-
 
 def scrape_deccan_herald_education():
     try:
@@ -270,14 +270,13 @@ def scrape_deccan_herald_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Deccan Herald"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Deccan Herald: {e}")
         return []
-
 
 def scrape_ndtv_education():
     try:
@@ -301,14 +300,13 @@ def scrape_ndtv_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "NDTV"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping NDTV: {e}")
         return []
-
 
 def scrape_financial_express_education():
     try:
@@ -332,7 +330,7 @@ def scrape_financial_express_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Financial Express"})
                     seen_titles.add(title)
 
         return articles
@@ -340,8 +338,6 @@ def scrape_financial_express_education():
         print(f"Error scraping Financial Express: {e}")
         return []
 
-
-# Global News Sources
 def scrape_bbc_education():
     try:
         session = get_session()
@@ -364,14 +360,13 @@ def scrape_bbc_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "BBC"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping BBC: {e}")
         return []
-
 
 def scrape_guardian_education():
     try:
@@ -395,14 +390,13 @@ def scrape_guardian_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "The Guardian"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Guardian: {e}")
         return []
-
 
 def scrape_nytimes_education():
     try:
@@ -426,14 +420,13 @@ def scrape_nytimes_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "NY Times"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping NY Times: {e}")
         return []
-
 
 def scrape_washington_post_education():
     try:
@@ -457,14 +450,13 @@ def scrape_washington_post_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Washington Post"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Washington Post: {e}")
         return []
-
 
 def scrape_telegraph_education():
     try:
@@ -488,14 +480,13 @@ def scrape_telegraph_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "The Telegraph"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Telegraph: {e}")
         return []
-
 
 def scrape_times_higher_education():
     try:
@@ -519,14 +510,13 @@ def scrape_times_higher_education():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Times Higher Education"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Times Higher Education: {e}")
         return []
-
 
 def scrape_inside_higher_ed():
     try:
@@ -550,14 +540,13 @@ def scrape_inside_higher_ed():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "Inside Higher Ed"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Inside Higher Ed: {e}")
         return []
-
 
 def scrape_edweek():
     try:
@@ -581,14 +570,13 @@ def scrape_edweek():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "EdWeek"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping EdWeek: {e}")
         return []
-
 
 def scrape_chronicle():
     try:
@@ -612,13 +600,14 @@ def scrape_chronicle():
                     elif not href.startswith('http'):
                         continue
 
-                    articles.append({"title": title, "url": href})
+                    articles.append({"title": title, "url": href, "source": "The Chronicle"})
                     seen_titles.add(title)
 
         return articles
     except Exception as e:
         print(f"Error scraping Chronicle: {e}")
         return []
+
 
 
 def scrape_news(region, sources=None):
