@@ -609,6 +609,30 @@ def scrape_chronicle():
         return []
 
 
+def scrape_india_today_education():
+    try:
+        session = get_session()
+        url = "https://www.indiatoday.in/education-today/news"
+        response = session.get(url, timeout=15)
+        soup = BeautifulSoup(response.content, "html.parser")
+        articles = []
+
+        # Each article is inside a div with class 'B1S3_content__wrap__9mSB6'
+        for item in soup.select('div.B1S3_content__wrap__9mSB6'):
+            a_tag = item.find('a', href=True, title=True)
+            if not a_tag:
+                continue
+            title = a_tag['title'].strip()
+            href = a_tag['href']
+            if href.startswith('/'):
+                href = "https://www.indiatoday.in" + href
+
+            articles.append({"title": title, "url": href, "source": "India Today" })
+
+        return articles
+    except Exception as e:
+        print(f"Error scraping India Today: {e}")
+        return []
 
 def scrape_news(region, sources=None):
     articles = []
@@ -636,7 +660,8 @@ def scrape_news(region, sources=None):
                 scrape_the_hindu_education,
                 scrape_deccan_herald_education,
                 scrape_ndtv_education,
-                scrape_financial_express_education
+                scrape_financial_express_education,
+                scrape_india_today_education  # <-- Added India Today here
             ]
         else:
             default_sources = [
@@ -672,6 +697,7 @@ def scrape_news(region, sources=None):
             "deccan_herald": scrape_deccan_herald_education,
             "ndtv": scrape_ndtv_education,
             "financial_express": scrape_financial_express_education,
+            "india_today": scrape_india_today_education,  # <-- Added India Today here
             "bbc": scrape_bbc_education,
             "guardian": scrape_guardian_education,
             "nytimes": scrape_nytimes_education,
