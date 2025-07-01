@@ -636,6 +636,7 @@ def scrape_india_today_education():
 
 def scrape_news(region, sources=None):
     articles = []
+    
     errors = []
     if not sources:
         print(f"Scraping news for region: {region}")

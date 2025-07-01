@@ -4,18 +4,40 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from emailer import send_email, build_html_email
+from higher_ed import scrape_higher_ed_news
+from entertainment import scrape_entertainment_news
+from sports import scrape_sports_news
+from business_and_finance import scrape_business_finance_news
+from dotenv import load_dotenv
+from technology import scrape_technology_news
+from news_sources import scrape_news
+from environment import scrape_environment_news
+from industry import scrape_industry_news
+from health import scrape_health_news
 
+
+load_dotenv(dotenv_path="scratch.env")
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
-def select_top_news_with_gemini(articles, top_n=10):
-    """
-    Use Gemini LLM to score each article for importance (1-10), then select the top N in Python.
-    Each article is a dict with 'title', 'url', and optionally 'source'.
-    Returns a list of selected articles.
-    """
+# Add this mapping at the top of your file
+SPORTS_SOURCE_MAP = {
+    "indian_express_sports": "Indian Express",
+    "espncricinfo": "ESPN Cricinfo",
+    "ndtv_sports": "NDTV Sports",
+    "the_hindu_sports": "The Hindu",
+    "bbc_sport": "BBC Sport",
+    "guardian_sports": "The Guardian",
+    "espn_global": "ESPN"
+}
+
+
+def select_top_news_with_gemini(articles, top_n=10, return_scores=False):
+    print(f"[Gemini] Preparing to call Gemini LLM with {len(articles)} articles, requesting top {top_n}.")
     if not GEMINI_API_KEY:
         print("Gemini API key not found.")
+        if return_scores:
+            return [(art, None) for art in articles[:top_n]]
         return articles[:top_n]
 
     llm = ChatGoogleGenerativeAI(
@@ -36,7 +58,9 @@ def select_top_news_with_gemini(articles, top_n=10):
         url = article["url"]
         prompt += f"{idx}. {source}, {title}\n{url}\n"
 
+    print("[Gemini] Calling Gemini LLM API...")
     response = llm.invoke([HumanMessage(content=prompt)])
+    print("[Gemini] Gemini LLM API call completed.")
     print("Gemini raw output:\n", response.content)  # For debugging
 
     lines = str(response.content).split("\n")
@@ -60,15 +84,19 @@ def select_top_news_with_gemini(articles, top_n=10):
         else:
             i += 1
 
-    # Sort by score descending and select top N in Python
+    # Sort by score descending
     scored_articles.sort(key=lambda x: x[1], reverse=True)
-    top_articles = [art for art, score in scored_articles[:top_n]]
 
-    # Fallback: if parsing fails, just return first N
-    if len(top_articles) < top_n:
-        top_articles = [art for art, _ in scored_articles] + articles
-        top_articles = top_articles[:top_n]
-    return top_articles
+    # Print all scores in descending order
+    # print("[Gemini] All scored articles (descending order):")
+    # for idx, (art, score) in enumerate(scored_articles, 1):
+    #     print(f"[{idx}] Score: {score} | Title: {art.get('title')} | Source: {art.get('source')} | URL: {art.get('url')}")
+
+    # Return top N
+    if return_scores:
+        return scored_articles[:top_n]
+    else:
+        return [art for art, score in scored_articles[:top_n]]
 
 
 from transformers import pipeline
@@ -76,12 +104,8 @@ import gradio as gr
 import smtplib
 from email.mime.text import MIMEText
 import re
-from news_sources import scrape_news
-import requests
 
-from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="scratch.env")
 
 # --- Enhanced Classifier ---
 try:
@@ -290,55 +314,97 @@ def format_email(articles):
     return body
 
 
-def process_and_send(emails, region, content_type, top_n=10, sources=None):
-    articles, errors = scrape_news(region, sources)
+def process_and_send(emails, category, region, content_type, top_n=10, sources=None):
+    
+    print(f"[process_and_send] Function Called with \
+            category={category}, \
+            region={region}, \
+            content_type={content_type}, \
+            top_n={top_n}, \
+            sources={sources}")
+
+    errors = []
+    articles = []
+    topic = ""
+
+    # Scraping step
+    print(f"Starting scraping for category: {category}")
+    print(f"Sources to scrape: {sources}")
+    if category == "higher_ed":
+        articles = scrape_higher_ed_news(region=region, sources=sources)
+        topic = f"{region} Higher Education"
+    elif category == "entertainment":
+        articles = scrape_entertainment_news(region=region, sources=sources)
+        topic = f"{region} Entertainment"
+    elif category == "sports":
+        articles = scrape_sports_news(region=region, sources=sources)
+        topic = f"{region} Sports"
+    elif category == "business_and_finance":
+        articles = scrape_business_finance_news(region=region, sources=sources)
+        topic = f"{region} Business & Finance"
+    elif category == "tech":
+        articles = scrape_technology_news(region=region, sources=sources)
+        topic = f"{region} Technology"
+    elif category == "environment":
+        articles = scrape_environment_news(region=region, sources=sources)
+        topic = f"{region} Environment"
+    elif category == "industry":
+        articles = scrape_industry_news(region=region, sources=sources)
+        topic = f"{region} Industry"
+    elif category == "health":
+        articles = scrape_health_news(region=region, sources=sources)
+        topic = f"{region} Health"
+
+    else: # Default to general
+        articles, errors = scrape_news(region, sources)
+        topic = region if region else "General"
+    print(f"[process_and_send] Scraping complete. Found {len(articles)} articles.")
+
     # Support multiple emails separated by comma or semicolon
     if not emails:
-        return "❌ Please enter at least one email address"
+        msg = "\u274c Please enter at least one email address"
+        print("[process_and_send] No emails provided.")
+        return msg
 
     # Split and clean emails
     email_list = [e.strip() for e in re.split(r"[;,]", emails) if e.strip()]
     invalids = [e for e in email_list if "@" not in e]
     if not email_list or invalids:
-        return f"❌ Invalid email(s): {', '.join(invalids)}"
-
-    print(f"📰 Found {len(articles)} total articles")
+        msg = f"\u274c Invalid email(s): {', '.join(invalids)}"
+        print(f"[process_and_send] Invalid emails: {invalids}")
+        return msg
 
     if not articles:
-        msg = "⚠️ No articles found for the selected region. Please try again later."
+        print("[process_and_send] No articles found after scraping.")
+        msg = "\u26a0\ufe0f No articles found for the selected region. Please try again later."
         if errors:
-            msg += "\n\n⚠️ Some sources failed to scrape:\n" + "\n".join(errors)
+            msg += "\n\n\u26a0\ufe0f Some sources failed to scrape:\n" + "\n".join(errors)
         return msg
 
     # Filter articles by content type (General/Sensitive/All)
+    
     filtered = []
     for article in articles:
-        category = classify_article(article["title"])
+        category_label = classify_article(article["title"])
         if content_type == "All":
             filtered.append(article)
-        elif content_type == "Only General" and category == "General":
+        elif content_type == "Only General" and category_label == "General":
             filtered.append(article)
-        elif content_type == "Only Sensitive" and category == "Sensitive":
+        elif content_type == "Only Sensitive" and category_label == "Sensitive":
             filtered.append(article)
 
-    print(f"🔍 Filtered to {len(filtered)} articles")
-
-    if not filtered:
-        msg = "⚠️ No articles match your content preferences. Try selecting 'All' content type."
-        if errors:
-            msg += "\n\n⚠️ Some sources failed to scrape:\n" + "\n".join(errors)
-        return msg
+    
 
     # Use Gemini to select top N important headlines
+    print(f"Calling select_top_news_with_gemini with {len(filtered)} articles.")
     top_articles = select_top_news_with_gemini(filtered, top_n=top_n)
-    print(f"✨ Gemini selected {len(top_articles)} top articles")
+    print(f"Gemini selection complete. {len(top_articles)} articles selected.")
 
     # Format email body once
-
-
+    print(f"Formatting email body and sending emails to: {email_list}")
     email_body = format_email([(a, classify_article(a["title"])) for a in top_articles])
-    html_body = build_html_email(top_articles, topic=region)
-    subject = f"📚 Education News Digest - {region} (Top {top_n} articles)"
+    html_body = build_html_email(top_articles, topic=topic)
+    subject = f" {topic} News Digest - (Top {top_n} articles)"
 
     # Send to all emails
     success, failed = [], []
@@ -350,11 +416,12 @@ def process_and_send(emails, region, content_type, top_n=10, sources=None):
 
     msg = ""
     if success:
-        msg += f"✅ Email sent successfully to: {', '.join(success)}\n"
+        msg += f"\u2705 Email sent successfully to: {', '.join(success)}\n"
     if failed:
-        msg += f"❌ Failed to send email to: {', '.join(failed)}"
+        msg += f"\u274c Failed to send email to: {', '.join(failed)}"
     if errors:
-        msg += "\n\n⚠️ Some sources failed to scrape:\n" + "\n".join(errors)
+        msg += "\n\n\u26a0\ufe0f Some sources failed to scrape:\n" + "\n".join(errors)
+    print(f"Done. Returning status message.")
     return msg.strip()
 
 

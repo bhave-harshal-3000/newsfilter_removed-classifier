@@ -3,6 +3,50 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+
+
+import re
+import unicodedata
+
+def clean_title(title):
+    if not title:
+        return None
+    
+    # First, clean Unicode characters
+    # Replace common problematic Unicode characters
+    replacements = {
+        '"': '"',  # Left double quotation mark
+        '"': '"',  # Right double quotation mark
+        ''': "'",  # Left single quotation mark
+        ''': "'",  # Right single quotation mark
+        '—': '-',  # Em dash
+        '–': '-',  # En dash
+        '…': '...',  # Horizontal ellipsis
+        ' ': ' ',  # Non-breaking space
+        '′': "'",  # Prime
+        '″': '"',  # Double prime
+    }
+    
+    for unicode_char, ascii_char in replacements.items():
+        title = title.replace(unicode_char, ascii_char)
+    
+    # Normalize Unicode and convert to ASCII
+    title = unicodedata.normalize('NFKD', title)
+    title = title.encode('ascii', 'ignore').decode('ascii')
+    
+    # Clean whitespace
+    title = re.sub(r'\s+', ' ', title.strip())
+    
+    if len(title) < 10 or len(title) > 200:
+        return None
+    
+    # Filter out navigation items and ads
+    skip_words = ['subscribe', 'login', 'register', 'advertisement', 'menu', 'search', 'newsletter']
+    if any(word in title.lower() for word in skip_words):
+        return None
+    
+    return title
+
 def build_html_email(articles, topic="News"):
     html_body = f"""
     <!DOCTYPE html>
@@ -132,16 +176,18 @@ def build_html_email(articles, topic="News"):
     <body>
         <div class="container">
             <div class="header">
-                <h1>📰 Top {len(articles)} {topic.title()} Articles</h1>
+                <h1>Top {len(articles)} {topic.title()} Articles</h1>
                 <p>Your curated news digest, delivered fresh</p>
             </div>
             <div class="content">
     """
 
     for i, article in enumerate(articles):
-        title = article.get("title", "Untitled")
+        title = clean_title(article.get("title", "Untitled"))
+        if not title:
+            continue  # Skip if title is empty or filtered out
         link = article.get("url", "#")
-        source = article.get("source", "Unknown Source")
+        source = clean_title(article.get("source", "Unknown Source"))
         if not link:
             continue  # Skip articles without a URL
 
@@ -171,7 +217,6 @@ def build_html_email(articles, topic="News"):
     """
     return html_body
 
-
 def send_email(to, subject, body, html_body=None):
     from_email = os.getenv("EMAIL")
     password = os.getenv("PASS")
@@ -183,8 +228,16 @@ def send_email(to, subject, body, html_body=None):
 
     msg.attach(MIMEText(body, 'plain', 'utf-8'))
     if html_body:
-        msg.attach(MIMEText(html_body, "html"))
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
 
+    # Debug prints
+    print("[send_email] : Function called ")
+    print("Subject repr:", repr(subject))
+    print("From repr:", repr(from_email))
+    print("To repr:", repr(to))
+    print("Body length:", len(body))
+    if html_body:
+        print("HTML body length:", len(html_body))
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as server:
             server.login(from_email, password)
