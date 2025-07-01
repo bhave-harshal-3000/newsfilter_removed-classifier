@@ -2,8 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 from time import sleep
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 
 
 def clean_text(text):

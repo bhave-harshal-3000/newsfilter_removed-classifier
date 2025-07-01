@@ -100,7 +100,7 @@ def select_top_news_with_gemini(articles, top_n=10, return_scores=False):
 
 
 from transformers import pipeline
-import gradio as gr
+
 import smtplib
 from email.mime.text import MIMEText
 import re
@@ -423,6 +423,8 @@ def process_and_send(emails, category, region, content_type, top_n=10, sources=N
         msg += "\n\n\u26a0\ufe0f Some sources failed to scrape:\n" + "\n".join(errors)
     print(f"Done. Returning status message.")
     return msg.strip()
+
+# import gradio as gr
 
 
 # # Create Gradio UI
