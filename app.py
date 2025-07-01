@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from news_ai_agent import process_and_send
+from dotenv import load_dotenv
+import os
+load_dotenv()  # Only needed locally
 
 app = Flask(__name__)
-app.secret_key = "_secret_key"  # Change this for production
+app.secret_key = os.environ.get("SECRET_KEY", "fallback_unsafe_dev_key")
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():

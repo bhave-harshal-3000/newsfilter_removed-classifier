@@ -401,7 +401,6 @@ def process_and_send(emails, category, region, content_type, top_n=10, sources=N
     print(f"Gemini selection complete. {len(top_articles)} articles selected.")
 
     # Format email body once
-    print(f"Formatting email body and sending emails to: {email_list}")
     email_body = format_email([(a, classify_article(a["title"])) for a in top_articles])
     html_body = build_html_email(top_articles, topic=topic)
     subject = f" {topic} News Digest - (Top {top_n} articles)"

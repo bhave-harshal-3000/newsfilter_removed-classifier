@@ -187,7 +187,7 @@ def build_html_email(articles, topic="News"):
         if not title:
             continue  # Skip if title is empty or filtered out
         link = article.get("url", "#")
-        source = clean_title(article.get("source", "Unknown Source"))
+        source = article.get("source") or "Unknown Source"
         if not link:
             continue  # Skip articles without a URL
 
