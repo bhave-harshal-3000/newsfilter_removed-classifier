@@ -10,22 +10,8 @@ def index():
         email = request.form.get("email")
         category = request.form.get("category", "general")
         
-        region = None
-        if category == "higher_ed":
-            region = request.form.get("higher_ed_region")
-        elif category == "entertainment":
-            region = request.form.get("entertainment_region")
-        elif category == "sports":
-            region = request.form.get("sports_region")
-        elif category == "business_and_finance":
-            region = request.form.get("business_finance_region")
-        elif category == "environment":
-            region = request.form.get("region")
-        elif category == "industry":
-            region = request.form.get("region")
-        else: # general
-            region = request.form.get("region")
-
+        region = request.form.get("region")
+        
         content_type = request.form.get("content_type")
         top_n = int(request.form.get("top_n", 10))
         sources = request.form.getlist("sources")
