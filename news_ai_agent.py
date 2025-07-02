@@ -99,7 +99,7 @@ def select_top_news_with_gemini(articles, top_n=10, return_scores=False):
         return [art for art, score in scored_articles[:top_n]]
 
 
-from transformers import pipeline
+# from transformers import pipeline
 
 import smtplib
 from email.mime.text import MIMEText
@@ -108,14 +108,14 @@ import re
 
 
 # --- Enhanced Classifier ---
-try:
-    classifier = pipeline(
-        "sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest"
-    )
-    print("Classifier loaded successfully")
-except Exception as e:
-    print(f"Error loading classifier: {e}")
-    classifier = None
+# try:
+#     classifier = pipeline(
+#         "sentiment-analysis", model="cardiffnlp/twitter-roberta-base-sentiment-latest"
+#     )
+#     print("Classifier loaded successfully")
+# except Exception as e:
+#     print(f"Error loading classifier: {e}")
+#     classifier = None
 
 
 def clean_title(title):
