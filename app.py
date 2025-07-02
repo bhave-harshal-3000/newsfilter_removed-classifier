@@ -19,7 +19,7 @@ def index():
         content_type = request.form.get("content_type")
         top_n = int(request.form.get("top_n", 10))
         sources = request.form.getlist("sources")
-        status = process_and_send(email, category, region, content_type, top_n, sources)
+         status = process_and_send(email, category, region, top_n, sources)
         flash(status)
         return redirect(url_for("index"))
     return render_template("index.html")
